@@ -1,36 +1,68 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Bookmarkly
 
-## Getting Started
+Rediscover your X bookmarks, one at a time.
 
-First, run the development server:
+Bookmarkly lets you authenticate with your X account and surface a random bookmark with each click. Bookmarks are fetched in batches, shuffled, and cached locally — so after the first load, every click is instant and free.
+
+## Setup
+
+### 1. Create an X Developer App
+
+1. Go to the [X Developer Portal](https://developer.x.com/en/portal/dashboard)
+2. Create a new **Project**, then create an **App** inside it (v2 API endpoints require an app attached to a project)
+3. Under your app's settings, find **User authentication settings** and click **Set up**
+   - App type: **Web App**
+   - Callback URI: `http://127.0.0.1:3000/api/auth/callback`
+   - Website URL: any valid URL
+4. Save, then go to the **Keys and Tokens** tab
+5. Under **OAuth 2.0 Client ID and Client Secret**, copy both values
+
+### 2. Configure environment variables
+
+Copy the example env file and fill in your credentials:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.local.example .env
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open `.env` and set the following:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+X_API_CLIENT_ID=your_client_id
+X_API_CLIENT_SECRET=your_client_secret
+X_API_REDIRECT_URI=http://127.0.0.1:3000/api/auth/callback
+NEXT_PUBLIC_BASE_URL=http://127.0.0.1:3000
+SESSION_SECRET=your_random_secret
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Generate a secure `SESSION_SECRET` and copy it to your clipboard:
 
-## Learn More
+```bash
+openssl rand -base64 32 | pbcopy
+```
 
-To learn more about Next.js, take a look at the following resources:
+### 3. Run locally
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm install
+npm run dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Open [http://127.0.0.1:3000](http://127.0.0.1:3000) in your browser.
 
-## Deploy on Vercel
+> **Note:** Use `127.0.0.1` rather than `localhost` — the X OAuth callback requires an exact match with the URI registered in the developer portal.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Required X API scopes
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Your app must have the following OAuth 2.0 scopes enabled:
+
+- `tweet.read`
+- `users.read`
+- `bookmark.read`
+- `offline.access`
+
+These are configured under **User authentication settings** in the developer portal.
+
+## How it works
+
+The X API uses cursor-based pagination with no support for random access, so fetching a single random bookmark in one call isn't possible. Instead, Bookmarkly fetches up to 100 bookmarks per API call, shuffles them client-side using a Fisher-Yates shuffle, and stores the remaining unseen bookmarks in `localStorage`. Each click draws from that local cache — making subsequent picks instant with no additional API calls. When the cache runs out, the next page is fetched automatically using the stored pagination cursor.
