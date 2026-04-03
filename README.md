@@ -52,6 +52,12 @@ Open [http://127.0.0.1:3000](http://127.0.0.1:3000) in your browser.
 
 > **Note:** Use `127.0.0.1` rather than `localhost` — the X OAuth callback requires an exact match with the URI registered in the developer portal.
 
+## API credits & cost
+
+> **Warning:** Fetching bookmarks is not free. Each batch of 100 bookmarks costs approximately **$0.50** in API credits. Bookmarkly minimises this by caching batches locally — you're only charged when the cache is empty and a new page needs to be fetched.
+
+You'll need to add credits to your account in the [X Developer Portal](https://developer.x.com/en/portal/dashboard) under **Billing** before the bookmarks API will work. A small top-up ($5–10) is plenty for personal use.
+
 ## Required X API scopes
 
 Your app must have the following OAuth 2.0 scopes enabled:
